@@ -1,0 +1,6 @@
+selenium==4.20.0 # UI automation
+pytest==8.2.0    #test framework
+pytest-xdist==3.6.1     # for parallel test execution later
+requests==2.32.0        # for API testing
+allure-pytest==2.13.5   # for reports (we’ll use later)
+webdriver-manager==4.0.1 #auto-manages ChromeDriver
