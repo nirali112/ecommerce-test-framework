@@ -2,7 +2,7 @@ import pytest
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
-from page_objects import CheckoutPage  # adjust import if needed
+from page_objects.checkout_page import CheckoutPage  # adjust import if needed
 
 def create_driver():
     """Creates a Chrome WebDriver instance compatible with GitHub Actions CI."""
