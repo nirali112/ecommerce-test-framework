@@ -39,6 +39,10 @@ class ProductsPage:
             button_id = item_button_map[item_name]
             add_button = (By.ID, button_id)
             wait.until(EC.element_to_be_clickable(add_button)).click()
+            
+            # Wait a moment for cart to update
+            import time
+            time.sleep(0.5)
         else:
             raise ValueError(f"Unknown item: {item_name}")
 
@@ -49,8 +53,11 @@ class ProductsPage:
             badge = wait.until(EC.presence_of_element_located(self.cart_badge))
             return int(badge.text)
         except:
+            # If no badge is present, cart is empty
             return 0
     
-    def is_item_in_cart(self, item_name = None):
+    def is_item_in_cart(self, item_name=None):
         """Check if item was added to cart (cart count > 0)"""
+        # Note: item_name parameter kept for backward compatibility but not used
+        # This simple implementation just checks if cart has items
         return self.get_cart_count() > 0

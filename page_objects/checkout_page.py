@@ -39,10 +39,12 @@ class CheckoutPage:
         """Complete the entire checkout process"""
         wait = WebDriverWait(self.driver, 10)
         
-        # Open cart
+        # First, we need to go to the cart page
+        # The cart link should be visible after adding an item
         wait.until(EC.element_to_be_clickable(self.cart_link)).click()
         
-        # Start checkout
+        # Wait for cart page to load and click checkout
+        wait.until(EC.presence_of_element_located((By.CLASS_NAME, "cart_list")))
         wait.until(EC.element_to_be_clickable(self.checkout_button)).click()
         
         # Enter checkout information
@@ -53,6 +55,7 @@ class CheckoutPage:
         
         # Finish checkout
         wait.until(EC.element_to_be_clickable(self.finish_button)).click()
+
 
     def is_order_successful(self):
         """Check if order was completed successfully"""
