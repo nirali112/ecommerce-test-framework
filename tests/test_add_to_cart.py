@@ -3,14 +3,15 @@ from selenium.webdriver.chrome.service import Service
 from page_objects.login_page import LoginPage
 from page_objects.products_page import ProductsPage
 import time
+from webdriver_manager.chrome import ChromeDriverManager
 
 # class TestAddToCart:
 def test_add_item_to_cart():
     service = Service("/usr/local/bin/chromedriver")
     options = webdriver.ChromeOptions()
     options.add_argument("--start-maximized")
-
-    driver = webdriver.Chrome(service=service, options=options)
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    # driver = webdriver.Chrome(service=service, options=options)
     # self.driver = webdriver.Chrome(service=service, options=options)  # store driver in self
 
     # Step 1: Login

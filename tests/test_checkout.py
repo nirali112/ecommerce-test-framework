@@ -4,13 +4,15 @@ from page_objects.login_page import LoginPage
 from page_objects.products_page import ProductsPage
 from page_objects.checkout_page import CheckoutPage
 import time
+from webdriver_manager.chrome import ChromeDriverManager
+
 # class TestCheckoutFlow:
 def test_checkout_flow():
     service = Service("/usr/local/bin/chromedriver")
     options = webdriver.ChromeOptions()
     options.add_argument("--start-maximized")
-
-    driver = webdriver.Chrome(service=service, options=options)
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    # driver = webdriver.Chrome(service=service, options=options)
     # self.driver = webdriver.Chrome(service=service, options=options)  # store driver in self
 
     # Step 1: Login
