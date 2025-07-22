@@ -1,35 +1,49 @@
+import pytest
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
-from page_objects.login_page import LoginPage
-import time
 from webdriver_manager.chrome import ChromeDriverManager
 
+from page_objects import LoginPage  # adjust import if needed
 
-# class TestLogin:
-def test_valid_login():
-    # Setup driver (using manually installed chromedriver)
-    service = Service("/usr/local/bin/chromedriver")
+
+def create_driver():
+    """Creates a Chrome WebDriver instance compatible with GitHub Actions CI."""
     options = webdriver.ChromeOptions()
-    # options.add_argument("--start-maximized")
-    options.add_argument("--headless=new")     # Needed for GitHub CI
-    options.add_argument("--no-sandbox")       # Needed for Linux CI
-    options.add_argument("--disable-dev-shm-usage")  
+
+    # Explicitly set Chrome binary for CI (GitHub runners)
+    options.binary_location = "/usr/bin/google-chrome"
+
+    # Required flags for running in CI environments
+    options.add_argument("--headless=new")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
     options.add_argument("--window-size=1920,1080")
 
-    driver = webdriver.Chrome(options=options)    # driver = webdriver.Chrome(service=service, options=options)
-    # self.driver = webdriver.Chrome(service=service, options=options)  # store driver in self
+    # Use webdriver-manager to get the correct ChromeDriver
+    driver = webdriver.Chrome(
+        service=Service(ChromeDriverManager().install()),
+        options=options
+    )
+    return driver
 
-    # Create page object
+
+@pytest.fixture
+def driver():
+    driver = create_driver()
+    yield driver
+    driver.quit()
+
+
+def test_valid_login(driver):
     login_page = LoginPage(driver)
     login_page.load()
     login_page.login("standard_user", "secret_sauce")
-    # login_page.login("wrong_user", "wrong_pass")
+    assert login_page.is_logged_in()
 
-    # Wait just to see the page after login
-    # time.sleep(10)
 
-    # Assert login success
-    assert "Products" in driver.page_source
-
-    driver.quit()
+def test_invalid_login(driver):
+    login_page = LoginPage(driver)
+    login_page.load()
+    login_page.login("invalid_user", "wrong_password")
+    assert login_page.is_error_displayed()

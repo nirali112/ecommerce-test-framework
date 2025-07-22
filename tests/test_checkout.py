@@ -1,46 +1,33 @@
+import pytest
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
-from page_objects.login_page import LoginPage
-from page_objects.products_page import ProductsPage
-from page_objects.checkout_page import CheckoutPage
-import time
 from webdriver_manager.chrome import ChromeDriverManager
+from page_objects import CheckoutPage  # adjust import if needed
 
-# class TestCheckoutFlow:
-def test_checkout_flow():
-    service = Service("/usr/local/bin/chromedriver")
+def create_driver():
+    """Creates a Chrome WebDriver instance compatible with GitHub Actions CI."""
     options = webdriver.ChromeOptions()
-    # options.add_argument("--start-maximized")
-    options.add_argument("--headless=new")     # Needed for GitHub CI
-    options.add_argument("--no-sandbox")       # Needed for Linux CI
-    options.add_argument("--disable-dev-shm-usage")  
+    options.binary_location = "/usr/bin/google-chrome"
+
+    options.add_argument("--headless=new")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
     options.add_argument("--window-size=1920,1080")
-    driver = webdriver.Chrome(options=options)    # driver = webdriver.Chrome(service=service, options=options)
-    # self.driver = webdriver.Chrome(service=service, options=options)  # store driver in self
 
-    # Step 1: Login
-    login_page = LoginPage(driver)
-    login_page.load()
-    login_page.login("standard_user", "secret_sauce")
+    return webdriver.Chrome(
+        service=Service(ChromeDriverManager().install()),
+        options=options
+    )
 
-    # Step 2: Add product to cart
-    products_page = ProductsPage(driver)
-    products_page.add_item_to_cart()
-
-    # Step 3: Go to checkout
-    checkout_page = CheckoutPage(driver)
-    checkout_page.open_cart()
-    checkout_page.start_checkout()
-
-    # Step 4: Enter checkout info
-    checkout_page.enter_checkout_info("Nirali", "Mehta", "12345")
-
-    # Step 5: Finish checkout
-    checkout_page.finish_checkout()
-
-    # Step 6: Verify success message
-    success_message = checkout_page.get_success_message()
-    assert success_message == "Thank you for your order!"
-    time.sleep(120)
+@pytest.fixture
+def driver():
+    driver = create_driver()
+    yield driver
     driver.quit()
+
+def test_checkout_flow(driver):
+    checkout_page = CheckoutPage(driver)
+    checkout_page.load()
+    checkout_page.perform_checkout("John", "Doe", "12345")
+    assert checkout_page.is_order_successful()
