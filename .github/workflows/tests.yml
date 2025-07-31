@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -32,15 +32,20 @@ jobs:
       - name: Check Chrome version
         run: google-chrome --version
 
+      # Clear ChromeDriver cache and install latest
+      - name: Setup ChromeDriver
+        run: |
+          python -c "from webdriver_manager.chrome import ChromeDriverManager; import os; os.system('rm -rf ~/.wdm'); ChromeDriverManager().install()"
+
       # Run pytest with Allure
       - name: Run Tests
         run: |
-          pytest --alluredir=allure-results -v
+          python -m pytest tests/ api_tests/ --alluredir=allure-results -v
         continue-on-error: true
 
       # Generate Allure Report
       - name: Get Allure history
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         if: always()
         continue-on-error: true
         with:
@@ -57,7 +62,7 @@ jobs:
 
       # Upload Allure results as artifact
       - name: Upload Allure Results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: allure-results
@@ -65,7 +70,7 @@ jobs:
 
       # Upload Allure report as artifact
       - name: Upload Allure Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: allure-report
@@ -74,7 +79,7 @@ jobs:
       # Deploy to GitHub Pages
       - name: Deploy report to Github Pages
         if: always()
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v3.9.3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
