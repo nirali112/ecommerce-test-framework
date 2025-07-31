@@ -1,72 +1,44 @@
 import pytest
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
-from webdriver_manager.core.os_manager import ChromeType
+import allure
 from page_objects.checkout_page import CheckoutPage
-import platform
-import os
 
 
-def create_driver():
-    """Creates a Chrome WebDriver instance compatible with both local and CI environments."""
-    options = webdriver.ChromeOptions()
+@allure.feature("Checkout")
+@allure.story("Complete Purchase Flow")
+class TestCheckout:
     
-    # Detect if running on CI or local
-    is_ci = os.environ.get('CI', 'false').lower() == 'true'
-    is_mac = platform.system() == 'Darwin'
-    
-    if is_ci:
-        # CI-specific settings (Linux GitHub Actions)
-        options.binary_location = "/usr/bin/google-chrome"
-        options.add_argument("--headless=new")
-        options.add_argument("--no-sandbox")
-        options.add_argument("--disable-dev-shm-usage")
-        options.add_argument("--disable-gpu")
-        options.add_argument("--window-size=1920,1080")
+    @allure.title("User can complete checkout process")
+    @allure.description("Test the complete checkout flow from adding item to order confirmation")
+    @allure.severity(allure.severity_level.BLOCKER)
+    def test_checkout_flow(self, driver):
+        with allure.step("Initialize checkout page and add item to cart"):
+            checkout_page = CheckoutPage(driver)
+            checkout_page.load()
         
-        driver = webdriver.Chrome(
-            service=Service(ChromeDriverManager().install()),
-            options=options
-        )
-    else:
-        # Local development settings
-        options.add_argument("--window-size=1920,1080")
-        
-        if is_mac:
-            try:
-                driver = webdriver.Chrome(
-                    service=Service(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()),
-                    options=options
-                )
-            except Exception as e:
-                print(f"Failed with ChromeDriverManager: {e}")
-                try:
-                    driver = webdriver.Chrome(options=options)
-                except Exception as e2:
-                    print(f"Failed with system Chrome: {e2}")
-                    chromedriver_path = "/usr/local/bin/chromedriver"
-                    driver = webdriver.Chrome(
-                        service=Service(chromedriver_path),
-                        options=options
-                    )
-        else:
-            driver = webdriver.Chrome(
-                service=Service(ChromeDriverManager().install()),
-                options=options
+        with allure.step("Complete checkout with customer information"):
+            customer_info = {
+                "first_name": "John",
+                "last_name": "Doe",
+                "zip_code": "12345"
+            }
+            allure.attach(
+                str(customer_info),
+                name="Customer Information",
+                attachment_type=allure.attachment_type.JSON
             )
-    
-    return driver
-
-
-@pytest.fixture
-def driver():
-    driver = create_driver()
-    yield driver
-    driver.quit()
-
-def test_checkout_flow(driver):
-    checkout_page = CheckoutPage(driver)
-    checkout_page.load()
-    checkout_page.perform_checkout("John", "Doe", "12345")
-    assert checkout_page.is_order_successful()
+            checkout_page.perform_checkout(
+                customer_info["first_name"],
+                customer_info["last_name"],
+                customer_info["zip_code"]
+            )
+        
+        with allure.step("Verify order is successful"):
+            assert checkout_page.is_order_successful(), \
+                "Order should be completed successfully"
+            
+            success_message = checkout_page.get_success_message()
+            allure.attach(
+                success_message,
+                name="Success Message",
+                attachment_type=allure.attachment_type.TEXT
+            )
